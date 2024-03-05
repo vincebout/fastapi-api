@@ -10,7 +10,7 @@ try:
         Settings.POSTGRES_MAX_CONNECTIONS,
         database = Settings.POSTGRES_DB,
         user = Settings.POSTGRES_USER,
-        host= 'localhost',
+        host = Settings.POSTGRES_HOST,
         password = Settings.POSTGRES_PASSWORD,
         port = Settings.POSTGRES_PORT
     )
