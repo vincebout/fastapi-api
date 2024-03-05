@@ -28,7 +28,7 @@ def init_tables(conn):
                 code varchar(4) NOT NULL, is_activated boolean DEFAULT false, created_at timestamp DEFAULT now(),
                 UNIQUE(email),
                 CONSTRAINT correct_email CHECK (email ~* '^[A-Za-z0-9._+%-]+@[A-Za-z0-9.-]+[.][A-Za-z]+$'),
-                CONSTRAINT email_min_size_check CHECK (char_length(email) < 6))
+                CONSTRAINT email_min_size_check CHECK (char_length(email) > 6))
             """)
             curs.execute("CREATE INDEX IF NOT EXISTS id_idx ON public.users (id)")
             curs.execute("CREATE INDEX IF NOT EXISTS email_idx ON public.users (email)")
