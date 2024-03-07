@@ -1,12 +1,12 @@
 """ Test user routes """
 from datetime import datetime
 import json
-import bcrypt
 from fastapi.testclient import TestClient
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import pytest
 from ..database.database import postgreSQL_pool
+from ..utils.helpers import hash_password
 
 from ..main import app
 
@@ -32,9 +32,7 @@ class TestUsers:
     @pytest.fixture()
     def insert_test_user(self):
         """ Insert test user before tests """
-        password_bytes = ('testpassword').encode('utf-8')
-        salt = bcrypt.gensalt(12)
-        hashed_password = bcrypt.hashpw(password_bytes, salt).decode()
+        hashed_password = hash_password('testpassword')
         now = datetime.now()
         try:
             conn = postgreSQL_pool.getconn()

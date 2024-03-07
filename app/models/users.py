@@ -6,6 +6,17 @@ class CreateUsers(BaseModel):
     email: str
     password: str
 
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "email": "myemail@exemple.com",
+                    "password": "Ul8*K4Hni8",
+                }
+            ]
+        }
+    }
+
 class UserResponse(BaseModel):
     """ Class of User response"""
     id: int

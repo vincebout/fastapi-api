@@ -5,6 +5,7 @@ from ..config.config import Settings
 from ..internal.log_config import logger
 
 try:
+    logger.info("Connecting to database")
     postgreSQL_pool = pool.SimpleConnectionPool(
         Settings.POSTGRES_MIN_CONNECTIONS,
         Settings.POSTGRES_MAX_CONNECTIONS,
@@ -16,6 +17,8 @@ try:
     )
 except (psycopg2.DatabaseError) as connect_error:
     logger.error(connect_error)
+finally:
+    logger.info("Connected to database")
 
 def init_tables(conn):
     """ Init tables if they do not exist """

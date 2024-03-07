@@ -10,13 +10,14 @@ from ..models.users import CreateUsers, UserResponse
 from ..database.database import postgreSQL_pool
 from ..internal.log_config import logger
 from ..config.config import Settings
+from ..utils.helpers import hash_password
 
 router = APIRouter()
 
 security = HTTPBasic()
 
 def check_credentials(credentials: HTTPBasicCredentials = Depends(security)):
-    """ Check crendtials """
+    """ Check credentials """
     username = credentials.username
     password = credentials.password
 
@@ -36,7 +37,7 @@ def check_credentials(credentials: HTTPBasicCredentials = Depends(security)):
         raise HTTPException(status_code=400, detail="Incorrect email or password")
 
     password_check = bcrypt.checkpw(password.encode('utf-8'),
-                            json_result['password'].encode('utf-8'))
+                                    json_result['password'].encode('utf-8'))
     if password_check is not True:
         raise HTTPException(status_code=400, detail="Incorrect email or password")
 
@@ -81,9 +82,7 @@ async def create_user(user: CreateUsers):
         # Generate a random 4 digits code
         code = str(randint(1, 9999)).zfill(4)
         # Hash password
-        password_bytes = user.password.encode('utf-8')
-        salt = bcrypt.gensalt(12)
-        hashed_password = bcrypt.hashpw(password_bytes, salt).decode()
+        hashed_password = hash_password(user.password)
         with conn.cursor(cursor_factory=RealDictCursor) as curs:
             # Insert in db
             curs.execute("""
