@@ -6,7 +6,7 @@ from psycopg2.extras import RealDictCursor
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.encoders import jsonable_encoder
-from ..models.users import CreateUsers, UserResponse, UsersResponse
+from ..models.users import CreateUsers, UserResponse
 from ..database.database import postgreSQL_pool
 from ..internal.log_config import logger
 from ..config.config import Settings
@@ -42,22 +42,29 @@ def check_credentials(credentials: HTTPBasicCredentials = Depends(security)):
 
     return username
 
-@router.get("/users", tags=["users"], status_code=200, response_model=UsersResponse)
-async def get_users():
-    """ Get all users """
+@router.get("/user/{user_id}", tags=["users"], status_code=200, response_model=UserResponse)
+async def get_users(user_id: int, username: str = Depends(check_credentials)):
+    """ Get a user """
     try:
         conn = postgreSQL_pool.getconn()
         with conn.cursor(cursor_factory=RealDictCursor) as curs:
             # Fetch from db
-            curs.execute('SELECT id, email, created_at FROM public.users')
-            results = curs.fetchall()
+            curs.execute("""
+                         SELECT id, email, created_at, is_activated FROM public.users
+                         WHERE id = %s and email = %s
+                         """,
+                         (user_id, username))
+            result = curs.fetchone()
     except (psycopg2.DatabaseError) as error:
         logger.error(error)
         raise HTTPException(status_code=500, detail="An error has occured") from error
     finally:
         postgreSQL_pool.putconn(conn)
 
-    return UsersResponse(data=jsonable_encoder(results))
+    if result is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return jsonable_encoder(result)
 
 @router.post("/users", tags=["users"], status_code=201, response_model=UserResponse)
 async def create_user(user: CreateUsers):
@@ -107,20 +114,22 @@ async def create_user(user: CreateUsers):
                 new_user['code'], new_user['email'])
     return jsonable_encoder(new_user)
 
-@router.put("/users/activate", tags=["users"], status_code=200)
-async def activate_user(code: str, username: str = Depends(check_credentials)):
+@router.patch("/users/activate/{user_id}", tags=["users"], status_code=200)
+async def activate_user(user_id: int, code: str, username: str = Depends(check_credentials)):
     """ Activate a user """
     try:
         conn = postgreSQL_pool.getconn()
         with conn.cursor(cursor_factory=RealDictCursor) as curs:
             curs.execute("""
-                         SELECT is_activated, extract(epoch from (now() - created_at)) as delay
+                         SELECT code, is_activated, extract(epoch from (now() - created_at)) as delay
                          FROM public.users
-                         WHERE email = %s AND code = %s
+                         WHERE id = %s
                          """,
-                         (username, code))
+                         (user_id,))
             result = curs.fetchone()
         if result is None:
+            raise HTTPException(status_code=404, detail="The user was not found")
+        if result['code'] != code:
             raise HTTPException(status_code=400, detail="The code provided is incorrect")
         if result['is_activated']:
             raise HTTPException(status_code=400, detail="The user is already activated")
@@ -128,8 +137,8 @@ async def activate_user(code: str, username: str = Depends(check_credentials)):
             raise HTTPException(status_code=400, detail="The code is no longer available")
         with conn.cursor(cursor_factory=RealDictCursor) as curs:
             # Set the user as activated
-            curs.execute("UPDATE public.users SET is_activated = true WHERE email = %s",
-                         (username,))
+            curs.execute("UPDATE public.users SET is_activated = true WHERE id = %s",
+                         (user_id,))
             conn.commit()
     except (psycopg2.DatabaseError) as error:
         logger.error(error)

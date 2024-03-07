@@ -11,7 +11,4 @@ class UserResponse(BaseModel):
     id: int
     email: str
     created_at: str
-
-class UsersResponse(BaseModel):
-    """ Class of list of Users """
-    data: list[UserResponse]
+    is_activated: bool
