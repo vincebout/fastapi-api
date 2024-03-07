@@ -9,11 +9,10 @@ from .internal.log_config import logger
 async def lifespan(app):
     """ Startup and close methods """
     # Init tables if not created
-    logger.info("Connecting to database")
     conn = postgreSQL_pool.getconn()
-    init_tables(conn)
-    postgreSQL_pool.putconn(conn)
-    logger.info("Connected to database")
+    if postgreSQL_pool:
+        init_tables(conn)
+        postgreSQL_pool.putconn(conn)
     yield
     # Close connection at shutdown
     if postgreSQL_pool:
@@ -21,7 +20,26 @@ async def lifespan(app):
         postgreSQL_pool.closeall()
         logger.info("Connection to database closed")
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    title="FastAPI API",
+    description="""
+## Overview
+
+You can **create users**.
+
+## Users
+
+You will be able to:
+
+* **Create users**.
+* **Read a user**.
+* **Activate a user**.
+
+To read and activate a user you must be logged in.
+    """,
+    summary="This API is used to create and activate users",
+    version="1.0.0",
+    lifespan=lifespan)
 app.include_router(users.router)
 
 
