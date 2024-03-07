@@ -44,6 +44,15 @@ curl -X 'POST' \
 }'
 ```
 
+### Get a user
+
+```
+curl -X 'GET' -d "username=myuser@test.com&password=mypassword" \
+  'http://localhost:8000/user/1' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Basic dGVzdEB0ZXN0LmZyOnRlc3RwYXNzd29yZA=='
+```
+
 ### Activate a user
 
 ```
