@@ -47,19 +47,17 @@ curl -X 'POST' \
 ### Get a user
 
 ```
-curl -X 'GET' -d "username=myuser@test.com&password=mypassword" \
+curl -X 'GET' --user myuser@test.com:mypassword \
   'http://localhost:8000/user/1' \
-  -H 'accept: application/json' \
-  -H 'Authorization: Basic dGVzdEB0ZXN0LmZyOnRlc3RwYXNzd29yZA=='
+  -H 'accept: application/json'
 ```
 
 ### Activate a user
 
 ```
-curl -X 'PUT' -d "username=myuser@test.com&password=mypassword" \
-  'http://localhost:8000/users/activate?code=2871' \
-  -H 'accept: application/json' \
-  -H 'Authorization: Basic dGVzdEB0ZXN0LmNvbTp0ZXN0cGFzc3dvcmQ='
+curl -X 'PATCH' --user myuser@test.com:mypassword \
+  'http://localhost:8000/users/activate/1?code=0000' \
+  -H 'accept: application/json'
 ```
 
 > You can get the code in the logs of the running container:
