@@ -27,11 +27,12 @@ def init_tables(conn):
             logger.info("Initializing tables")
             curs.execute("""
                 CREATE TABLE IF NOT EXISTS public.users
-                (id serial PRIMARY KEY, email varchar(50) NOT NULL, password text NOT NULL,
-                code varchar(4) NOT NULL, is_activated boolean DEFAULT false, created_at timestamp DEFAULT now(),
+                (id serial PRIMARY KEY, email varchar(50) NOT NULL, password varchar(100) NOT NULL,
+                code varchar(4) NOT NULL, is_activated boolean DEFAULT false NOT NULL, created_at timestamp DEFAULT now() NOT NULL,
                 UNIQUE(email),
                 CONSTRAINT correct_email CHECK (email ~* '^[A-Za-z0-9._+%-]+@[A-Za-z0-9.-]+[.][A-Za-z]+$'),
-                CONSTRAINT email_min_size_check CHECK (char_length(email) > 6))
+                CONSTRAINT email_min_size_check CHECK (char_length(email) > 6),
+                CONSTRAINT code_size_check CHECK (char_length(code) = 4))
             """)
             curs.execute("CREATE INDEX IF NOT EXISTS id_idx ON public.users (id)")
             curs.execute("CREATE INDEX IF NOT EXISTS email_idx ON public.users (email)")
