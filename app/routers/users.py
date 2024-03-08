@@ -122,9 +122,9 @@ async def activate_user(user_id: int, code: str, username: str = Depends(check_c
             curs.execute("""
                          SELECT code, is_activated, extract(epoch from (now() - created_at)) as delay
                          FROM public.users
-                         WHERE id = %s
+                         WHERE id = %s and email = %s
                          """,
-                         (user_id,))
+                         (user_id, username))
             result = curs.fetchone()
         if result is None:
             raise HTTPException(status_code=404, detail="The user was not found")

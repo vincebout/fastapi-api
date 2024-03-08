@@ -75,6 +75,18 @@ class TestUsers:
         json_response = response.json()
         assert json_response['detail'] == "Not authenticated"
 
+    @pytest.mark.usefixtures('insert_test_user')
+    def test_get_other_user(self):
+        """ Test GET other user """
+        data = {"email":"test@test.com", "password":"testuser"}
+        response = client.post("/users", data=json.dumps(data))
+        assert response.status_code == 201
+        json_response = response.json()
+        response = client.get(f"/user/{json_response['id']}", auth=("test@test.fr", "testpassword"))
+        assert response.status_code == 404
+        json_response = response.json()
+        assert json_response['detail'] == "User not found"
+
     def test_post_create_user(self):
         """ Test POST users/ to create a user """
         data = {"email":"test@test.com", "password":"testuser"}
@@ -249,3 +261,15 @@ class TestUsers:
         response = client.patch("/users/activate/0?code=0000")
         assert response.status_code == 401
         assert response.json() == {"detail": "Not authenticated"}
+
+    @pytest.mark.usefixtures('insert_test_user')
+    def test_patch_activate_other_user(self):
+        """ Test activate an other user with authentification """
+        data = {"email":"test@test.com", "password":"testuser"}
+        response = client.post("/users", data=json.dumps(data))
+        assert response.status_code == 201
+        json_response = response.json()
+        response = client.patch(f"/users/activate/{json_response['id']}?code=0000",
+                                auth=("test@test.fr", "testpassword"))
+        assert response.status_code == 404
+        assert response.json() == {"detail": "The user was not found"}
