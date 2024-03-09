@@ -2,17 +2,12 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from .routers import users
-from .database.database import init_tables, postgreSQL_pool
+from .database.database import postgreSQL_pool
 from .internal.log_config import logger
 
 @asynccontextmanager
 async def lifespan(app):
     """ Startup and close methods """
-    # Init tables if not created
-    conn = postgreSQL_pool.getconn()
-    if postgreSQL_pool:
-        init_tables(conn)
-        postgreSQL_pool.putconn(conn)
     yield
     # Close connection at shutdown
     if postgreSQL_pool:

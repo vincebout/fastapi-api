@@ -4,21 +4,6 @@ from psycopg2 import pool
 from ..config.config import Settings
 from ..internal.log_config import logger
 
-try:
-    logger.info("Connecting to database")
-    postgreSQL_pool = pool.SimpleConnectionPool(
-        Settings.POSTGRES_MIN_CONNECTIONS,
-        Settings.POSTGRES_MAX_CONNECTIONS,
-        database = Settings.POSTGRES_DB,
-        user = Settings.POSTGRES_USER,
-        host = Settings.POSTGRES_HOST,
-        password = Settings.POSTGRES_PASSWORD,
-        port = Settings.POSTGRES_PORT
-    )
-except (psycopg2.DatabaseError) as connect_error:
-    logger.error(connect_error)
-finally:
-    logger.info("Connected to database")
 
 def init_tables(conn):
     """ Init tables if they do not exist """
@@ -39,3 +24,24 @@ def init_tables(conn):
         conn.commit()
     except (psycopg2.DatabaseError) as error:
         logger.error(error)
+
+try:
+    postgresql_db = Settings.POSTGRES_DB
+    if Settings.TESTING:
+        postgresql_db = Settings.TESTING_DB
+    logger.info("Connecting to database")
+    postgreSQL_pool = pool.SimpleConnectionPool(
+        Settings.POSTGRES_MIN_CONNECTIONS,
+        Settings.POSTGRES_MAX_CONNECTIONS,
+        database = postgresql_db,
+        user = Settings.POSTGRES_USER,
+        host = Settings.POSTGRES_HOST,
+        password = Settings.POSTGRES_PASSWORD,
+        port = Settings.POSTGRES_PORT
+    )
+    # Init tables if not created
+    init_tables(postgreSQL_pool.getconn())
+except (psycopg2.DatabaseError) as connect_error:
+    logger.error(connect_error)
+finally:
+    logger.info("Connected to database")
