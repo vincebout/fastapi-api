@@ -42,7 +42,7 @@ class TestUsers:
                     VALUES (%s, %s, %s, %s, %s)
                     RETURNING *;
                     """,
-                    ("1", "test@test.fr", hashed_password, "0000", now))
+                    ("100", "test@test.fr", hashed_password, "0000", now))
             conn.commit()
         except (psycopg2.DatabaseError) as error:
             print(error)
@@ -52,17 +52,17 @@ class TestUsers:
     @pytest.mark.usefixtures('insert_test_user')
     def test_get_user(self):
         """ Test GET user/ """
-        response = client.get("/user/1", auth=("test@test.fr", "testpassword"))
+        response = client.get("/user/100", auth=("test@test.fr", "testpassword"))
         assert response.status_code == 200
         json_response = response.json()
-        assert json_response['id'] == 1
+        assert json_response['id'] == 100
         assert json_response['is_activated'] is False
         assert json_response['email'] == "test@test.fr"
 
     @pytest.mark.usefixtures('insert_test_user')
     def test_get_user_wrong_login(self):
         """ Test GET user with wrong login """
-        response = client.get("/user/1", auth=("wrong@test.fr", "testpassword"))
+        response = client.get("/user/100", auth=("wrong@test.fr", "testpassword"))
         assert response.status_code == 400
         json_response = response.json()
         assert json_response['detail'] == "Incorrect email or password"
@@ -70,7 +70,7 @@ class TestUsers:
     @pytest.mark.usefixtures('insert_test_user')
     def test_get_user_without_login(self):
         """ Test GET user without login """
-        response = client.get("/user/1")
+        response = client.get("/user/100")
         assert response.status_code == 401
         json_response = response.json()
         assert json_response['detail'] == "Not authenticated"
@@ -188,7 +188,7 @@ class TestUsers:
     @pytest.mark.usefixtures('insert_test_user')
     def test_patch_activate_user_wrong_code(self):
         """ Test activate a user with wrong code"""
-        response = client.patch("/users/activate/1?code=9999",
+        response = client.patch("/users/activate/100?code=9999",
                                 auth=("test@test.fr", "testpassword"))
         assert response.status_code == 400
         assert response.json() == {"detail": "The code provided is incorrect"}
@@ -204,14 +204,14 @@ class TestUsers:
                     SET is_activated = true
                     WHERE id = %s;
                     """,
-                    ("1",))
+                    ("100",))
             conn.commit()
         except (psycopg2.DatabaseError) as error:
             print(error)
         finally:
             postgreSQL_pool.putconn(conn)
 
-        response = client.patch("/users/activate/1?code=0000",
+        response = client.patch("/users/activate/100?code=0000",
                               auth=("test@test.fr", "testpassword"))
         assert response.status_code == 400
         assert response.json() == {"detail": "The user is already activated"}
@@ -227,14 +227,14 @@ class TestUsers:
                     SET created_at = '2024-01-13 10:00:00.430322'
                     WHERE id = %s;
                     """,
-                    ("1",))
+                    ("100",))
             conn.commit()
         except (psycopg2.DatabaseError) as error:
             print(error)
         finally:
             postgreSQL_pool.putconn(conn)
 
-        response = client.patch("/users/activate/1?code=0000",
+        response = client.patch("/users/activate/100?code=0000",
                               auth=("test@test.fr", "testpassword"))
         assert response.status_code == 400
         assert response.json() == {"detail": "The code is no longer available"}
@@ -242,7 +242,7 @@ class TestUsers:
     @pytest.mark.usefixtures('insert_test_user')
     def test_patch_activate_user_wrong_login(self):
         """ Test activate a user with wrong login """
-        response = client.patch("/users/activate/1?code=0000",
+        response = client.patch("/users/activate/100?code=0000",
                                 auth=("wrong@test.com", "wrongpassword"))
         assert response.status_code == 400
         assert response.json() == {"detail": "Incorrect email or password"}
@@ -258,7 +258,7 @@ class TestUsers:
     @pytest.mark.usefixtures('insert_test_user')
     def test_patch_activate_user_not_authenticated(self):
         """ Test activate a user not authenticated """
-        response = client.patch("/users/activate/0?code=0000")
+        response = client.patch("/users/activate/100?code=0000")
         assert response.status_code == 401
         assert response.json() == {"detail": "Not authenticated"}
 

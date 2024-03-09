@@ -14,3 +14,6 @@ class Settings:
     POSTGRES_MIN_CONNECTIONS: int = os.environ.get('POSTGRES_MIN_CONNECTIONS')
 
     CODE_VALIDITY_PERIOD_SECS: int = 60
+
+    TESTING: bool = os.environ.get('TEST')
+    TESTING_DB: str = os.environ.get('TESTING_DB')
