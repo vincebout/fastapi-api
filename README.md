@@ -74,3 +74,7 @@ docker ps
 docker exec -it [id-of-docker-container] bash
 pytest app/
 ```
+
+# Schema
+
+![Schema](schema.png)
