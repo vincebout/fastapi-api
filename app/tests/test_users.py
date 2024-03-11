@@ -12,43 +12,42 @@ from ..main import app
 
 client = TestClient(app)
 
-class TestUsers:
-    """ Tests for User routes """
-
-    @pytest.fixture(autouse=True)
-    def run_before_and_after_tests(self):
-        """ Delete data before tests """
-        try:
-            conn = postgreSQL_pool.getconn()
-            with conn.cursor() as curs:
-                curs.execute("DELETE FROM public.users")
-            conn.commit()
-        except (psycopg2.DatabaseError) as error:
-            print(error)
-        finally:
-            postgreSQL_pool.putconn(conn)
+@pytest.fixture(autouse=True)
+def run_before_and_after_tests():
+    """ Delete data before tests """
+    try:
+        conn = postgreSQL_pool.getconn()
+        with conn.cursor() as curs:
+            curs.execute("DELETE FROM public.users")
+        conn.commit()
+    except (psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        postgreSQL_pool.putconn(conn)
 
 
-    @pytest.fixture()
-    def insert_test_user(self):
-        """ Insert test user before tests """
-        hashed_password = hash_password('testpassword')
-        now = datetime.now()
-        try:
-            conn = postgreSQL_pool.getconn()
-            with conn.cursor() as curs:
-                curs.execute("""
-                    INSERT INTO public.users (id, email, password, code, created_at)
-                    VALUES (%s, %s, %s, %s, %s)
-                    RETURNING *;
-                    """,
-                    ("100", "test@test.fr", hashed_password, "0000", now))
-            conn.commit()
-        except (psycopg2.DatabaseError) as error:
-            print(error)
-        finally:
-            postgreSQL_pool.putconn(conn)
+@pytest.fixture()
+def insert_test_user():
+    """ Insert test user before tests """
+    hashed_password = hash_password('testpassword')
+    now = datetime.now()
+    try:
+        conn = postgreSQL_pool.getconn()
+        with conn.cursor() as curs:
+            curs.execute("""
+                INSERT INTO public.users (id, email, password, code, created_at)
+                VALUES (%s, %s, %s, %s, %s)
+                RETURNING *;
+                """,
+                ("100", "test@test.fr", hashed_password, "0000", now))
+        conn.commit()
+    except (psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        postgreSQL_pool.putconn(conn)
 
+class TestGetUsers:
+    """ Tests for User GET routes """
     @pytest.mark.usefixtures('insert_test_user')
     def test_get_user(self):
         """ Test GET user/ """
@@ -87,6 +86,8 @@ class TestUsers:
         json_response = response.json()
         assert json_response['detail'] == "User not found"
 
+class TestPostUsers:
+    """ Tests for User POST routes """
     def test_post_create_user(self):
         """ Test POST users/ to create a user """
         data = {"email":"test@test.com", "password":"testuser"}
@@ -160,6 +161,8 @@ class TestUsers:
         json_response = response.json()
         assert json_response['detail'] == "The password must be at least 8 characters. Consider having a shorter one"
 
+class TestPatchUsers:
+    """ Tests for User PATCH routes """
     def test_patch_activate_user(self):
         """ Test PATCH users/ to activate a user"""
         data = {"email":"test@test.com", "password":"testuser"}
